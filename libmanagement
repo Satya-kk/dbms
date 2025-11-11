@@ -1,0 +1,78 @@
+CREATE DATABASE LibraryDB;
+USE LibraryDB;
+-- Table: Books
+CREATE TABLE Books (
+    book_id INT PRIMARY KEY AUTO_INCREMENT,
+    title VARCHAR(100),
+    author VARCHAR(100),
+    publisher VARCHAR(100)
+);
+
+-- Table: Members
+CREATE TABLE Members (
+    member_id INT PRIMARY KEY AUTO_INCREMENT,
+    member_name VARCHAR(100),
+    email VARCHAR(100)
+);
+
+-- Table: IssuedBooks
+CREATE TABLE IssuedBooks (
+    issue_id INT PRIMARY KEY AUTO_INCREMENT,
+    book_id INT,
+    member_id INT,
+    issue_date DATE,
+    return_date DATE,
+    FOREIGN KEY (book_id) REFERENCES Books(book_id),
+    FOREIGN KEY (member_id) REFERENCES Members(member_id)
+);
+-- Books
+INSERT INTO Books (title, author, publisher) VALUES
+('Database System Concepts', 'Navathe', 'Pearson'),
+('Operating System Principles', 'Silberschatz', 'McGraw-Hill'),
+('Let Us C', 'Yashwant Kanetkar', 'BPB'),
+('Artificial Intelligence', 'Russell', 'Pearson'),
+('Computer Networks', 'Tanenbaum', 'Pearson');
+
+-- Members
+INSERT INTO Members (member_name, email) VALUES
+('Amit Kumar', 'amit@example.com'),
+('Riya Sharma', 'riya@example.com'),
+('John Doe', 'john@example.com'),
+('Sneha Patel', 'sneha@example.com');
+
+-- Issued Books
+INSERT INTO IssuedBooks (book_id, member_id, issue_date, return_date) VALUES
+(1, 1, '2025-10-01', '2025-10-15'),
+(2, 2, '2025-10-05', '2025-10-20'),
+(3, 1, '2025-10-08', '2025-10-22'),
+(5, 4, '2025-10-12', NULL);
+
+SELECT m.member_name, b.title, b.author
+FROM Members m
+INNER JOIN IssuedBooks i ON m.member_id = i.member_id
+INNER JOIN Books b ON i.book_id = b.book_id;
+
+SELECT m.member_name, b.title, b.author
+FROM Members m
+LEFT JOIN IssuedBooks i ON m.member_id = i.member_id
+LEFT JOIN Books b ON i.book_id = b.book_id;
+
+SELECT b.title, b.author, m.member_name
+FROM Members m
+RIGHT JOIN IssuedBooks i ON m.member_id = i.member_id
+RIGHT JOIN Books b ON i.book_id = b.book_id;
+
+SELECT member_name
+FROM Members
+WHERE member_id IN (
+    SELECT member_id
+    FROM IssuedBooks
+    WHERE book_id IN (
+        SELECT book_id FROM Books WHERE author = 'Navathe'
+    )
+);
+
+SELECT 
+    m.member_name,
+    (SELECT COUNT(*) FROM IssuedBooks i WHERE i.member_id = m.member_id) AS total_books_issued
+FROM Members m;
