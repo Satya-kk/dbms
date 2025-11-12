@@ -1,0 +1,74 @@
+CREATE TABLE students (
+    student_id     NUMBER(5) PRIMARY KEY,
+    student_name   VARCHAR2(50),
+    subject1       NUMBER(3),
+    subject2       NUMBER(3),
+    subject3       NUMBER(3),
+    total_marks    NUMBER(5),
+    grade          VARCHAR2(2)
+);
+
+INSERT INTO students VALUES (101, 'Rahul', 80, 75, 90, NULL, NULL);
+INSERT INTO students VALUES (102, 'Sneha', 45, 50, 55, NULL, NULL);
+INSERT INTO students VALUES (103, 'John', 90, 85, 88, NULL, NULL);
+
+SET SERVEROUTPUT ON;
+
+DECLARE
+    v_student_id   students.student_id%TYPE;
+    v_name         students.student_name%TYPE;
+    v_sub1         students.subject1%TYPE;
+    v_sub2         students.subject2%TYPE;
+    v_sub3         students.subject3%TYPE;
+    v_total        students.total_marks%TYPE;
+    v_grade        students.grade%TYPE;
+
+BEGIN
+    -- 1️⃣ Accept student ID from user
+    v_student_id := &student_id;
+
+    -- 2️⃣ Retrieve student details
+    SELECT student_name, subject1, subject2, subject3
+    INTO v_name, v_sub1, v_sub2, v_sub3
+    FROM students
+    WHERE student_id = v_student_id;
+
+    -- 3️⃣ Calculate total marks
+    v_total := v_sub1 + v_sub2 + v_sub3;
+
+    -- 4️⃣ Use IF...ELSIF...ELSE to assign grade
+    IF v_total >= 250 THEN
+        v_grade := 'A';
+    ELSIF v_total >= 200 THEN
+        v_grade := 'B';
+    ELSIF v_total >= 150 THEN
+        v_grade := 'C';
+    ELSE
+        v_grade := 'F';
+    END IF;
+
+    -- 5️⃣ Update total_marks and grade
+    UPDATE students
+    SET total_marks = v_total,
+        grade = v_grade
+    WHERE student_id = v_student_id;
+
+    -- 6️⃣ Display output
+    DBMS_OUTPUT.PUT_LINE('-------------------------------------');
+    DBMS_OUTPUT.PUT_LINE('Student ID   : ' || v_student_id);
+    DBMS_OUTPUT.PUT_LINE('Name         : ' || v_name);
+    DBMS_OUTPUT.PUT_LINE('Subject 1    : ' || v_sub1);
+    DBMS_OUTPUT.PUT_LINE('Subject 2    : ' || v_sub2);
+    DBMS_OUTPUT.PUT_LINE('Subject 3    : ' || v_sub3);
+    DBMS_OUTPUT.PUT_LINE('Total Marks  : ' || v_total);
+    DBMS_OUTPUT.PUT_LINE('Grade        : ' || v_grade);
+    DBMS_OUTPUT.PUT_LINE('Record Updated Successfully!');
+    DBMS_OUTPUT.PUT_LINE('-------------------------------------');
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('❌ Student record not found for ID: ' || v_student_id);
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('⚠️ Unexpected error: ' || SQLERRM);
+END;
+/
