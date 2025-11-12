@@ -1,0 +1,93 @@
+CREATE TABLE accounts (
+  acc_no      NUMBER(6) PRIMARY KEY,
+  cust_name   VARCHAR2(50),
+  acc_type    VARCHAR2(10),
+  balance     NUMBER(10,2)
+);
+
+CREATE TABLE transactions (
+  trans_id    NUMBER(5) PRIMARY KEY,
+  acc_no      NUMBER(6),
+  trans_type  VARCHAR2(10),
+  amount      NUMBER(10,2),
+  trans_date  DATE      
+);
+
+INSERT INTO accounts VALUES (100001, 'Rahul Sharma', 'SAVING', 15000);
+INSERT INTO accounts VALUES (100002, 'Sneha Patel',  'CURRENT', 25000);
+INSERT INTO accounts VALUES (100003, 'John Paul',    'SAVING', 8000);
+INSERT INTO accounts VALUES (100004, 'Asha Nair',    'SAVING', 12000);
+INSERT INTO accounts VALUES (100005, 'Ravi Kumar',   'CURRENT', 18000);
+
+INSERT INTO transactions VALUES (101, 100001, 'DEPOSIT', 5000, SYSDATE-5);
+INSERT INTO transactions VALUES (102, 100001, 'WITHDRAW', 2000, SYSDATE-3);
+INSERT INTO transactions VALUES (103, 100003, 'DEPOSIT', 1000, SYSDATE-7);
+INSERT INTO transactions VALUES (104, 100004, 'WITHDRAW', 3000, SYSDATE-2);
+COMMIT;
+
+--implicit
+SET SERVEROUTPUT ON;
+
+BEGIN
+  UPDATE accounts
+  SET balance = balance * 1.05
+  WHERE acc_type = 'SAVING';
+
+  DBMS_OUTPUT.PUT_LINE(SQL%ROWCOUNT || ' saving accounts updated successfully with 5% interest.');
+END;
+/
+
+--explicit
+DECLARE
+  CURSOR c_accounts IS
+    SELECT cust_name, balance FROM accounts;
+
+  v_name    accounts.cust_name%TYPE;
+  v_balance accounts.balance%TYPE;
+BEGIN
+  OPEN c_accounts;
+  LOOP
+    FETCH c_accounts INTO v_name, v_balance;
+    EXIT WHEN c_accounts%NOTFOUND;
+
+    DBMS_OUTPUT.PUT_LINE('Customer: ' || v_name || ' | Balance: ₹' || v_balance);
+  END LOOP;
+  CLOSE c_accounts;
+END;
+/
+
+--cursor for loop
+BEGIN
+  FOR rec IN (SELECT acc_no, cust_name, balance FROM accounts WHERE balance < 10000) LOOP
+    DBMS_OUTPUT.PUT_LINE(
+      'Account No: ' || rec.acc_no ||
+      ' | Name: ' || rec.cust_name ||
+      ' | Balance: ₹' || rec.balance || ' → Low Balance Alert!'
+    );
+  END LOOP;
+END;
+/
+
+--parmeterized
+DECLARE
+  v_acc_no transactions.acc_no%TYPE := &account_number;
+
+  CURSOR c_trans(p_acc_no NUMBER) IS
+    SELECT trans_id, trans_type, amount, trans_date
+    FROM transactions
+    WHERE acc_no = p_acc_no;
+
+BEGIN
+  DBMS_OUTPUT.PUT_LINE('Transactions for Account No: ' || v_acc_no);
+  DBMS_OUTPUT.PUT_LINE('---------------------------------------------');
+
+  FOR rec IN c_trans(v_acc_no) LOOP
+    DBMS_OUTPUT.PUT_LINE(
+      'Trans ID: ' || rec.trans_id ||
+      ' | Type: ' || rec.trans_type ||
+      ' | Amount: ₹' || rec.amount ||
+      ' | Date: ' || TO_CHAR(rec.trans_date, 'DD-MON-YYYY')
+    );
+  END LOOP;
+END;
+/
