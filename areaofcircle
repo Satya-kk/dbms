@@ -1,0 +1,35 @@
+CREATE TABLE areas (
+  radius NUMBER(5,2),
+  area   NUMBER(10,4)
+);
+DECLARE
+    v_radius NUMBER(5,2);
+    v_area   NUMBER(10,4);
+    PI CONSTANT NUMBER := 3.14159;
+BEGIN
+    -- Loop for radius values 1 to 10
+    FOR v_radius IN 1..10 LOOP
+        BEGIN
+            -- Calculate area
+            v_area := PI * v_radius * v_radius;
+
+            -- Insert into table
+            INSERT INTO areas (radius, area)
+            VALUES (v_radius, v_area);
+
+            DBMS_OUTPUT.PUT_LINE('Inserted: Radius = ' || v_radius || ', Area = ' || v_area);
+        
+        EXCEPTION
+            WHEN OTHERS THEN
+                DBMS_OUTPUT.PUT_LINE('Error inserting radius ' || v_radius || ': ' || SQLERRM);
+        END;
+    END LOOP;
+
+    COMMIT; -- Save all inserted rows
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Unexpected error: ' || SQLERRM);
+END;
+/
+
+SELECT * FROM areas;
